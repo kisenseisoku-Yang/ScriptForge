@@ -1,29 +1,16 @@
 name: Build · 幕后 文字剧场
 
-# ============================================================
-# 触发条件：
-#   1. push 到 main / master 分支
-#   2. tag v1.5.10 之类的版本号
-#   3. 手动点 Actions 页面 "Run workflow"
-# ============================================================
 on:
   push:
     branches: [main, master]
     tags: ['v*']
   workflow_dispatch:
 
-# 每个 job 自己的 runner，互不干扰
 concurrency:
-  group: build-${{ github.ref }}-${{ matrix.os }}-${{ matrix.arch }}
+  group: build-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  # ============================================================
-  # 构建矩阵
-  #   macos-x64    → macos-13  (Intel Mac runner)
-  #   macos-arm64  → macos-latest (Apple Silicon runner)
-  #   windows-x64  → windows-latest
-  # ============================================================
   build:
     name: ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
@@ -44,45 +31,39 @@ jobs:
           targets: nsis,portable
 
     steps:
-      # ---------- 拉代码 ----------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ---------- Node.js ----------
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # ---------- 依赖安装 ----------
       - name: Install dependencies
         run: npm ci
 
-      # ---------- 前端编译 ----------
       - name: Vite build
         run: npm run build
 
-      # ---------- Electron 打包 ----------
-      # mac runner 上 electron-builder 自动做 ad-hoc deep codesign（Helper + Framework + 主 app）
-      # 没 Apple Developer 证书也能签好，用户双击即开
+      # mac runner 上 electron-builder 自动 ad-hoc deep codesign（Helper + Framework + 主 app）
       - name: Electron Builder
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
         run: |
+          OS_FLAG="${{ matrix.os == 'windows-latest' && 'win' || 'mac' }}"
+          TARGETS="${{ matrix.targets }}"
           npx electron-builder \
-            --${{ runner.os == 'macOS' && 'mac' || 'win' }} \
+            --${OS_FLAG} \
             --${{ matrix.arch }} \
             --publish never \
-            -c.mac.target=${{ matrix.targets }} \
-            -c.win.target=${{ matrix.targets }}
+            -c.${OS_FLAG}.target="${TARGETS}"
 
-      # ---------- 找产物 ----------
       - name: List artifacts
         shell: bash
-        run: ls -lh release/
+        run: ls -lh release/ 2>/dev/null || dir release\
 
-      # ---------- 上传到 Actions Artifacts ----------
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -95,11 +76,8 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
-  # ============================================================
-  # 如果是版本 tag，自动创建 GitHub Release 并挂载产物
-  # ============================================================
   release:
-    name: Release · v${{ github.ref_name }}
+    name: Release
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -113,12 +91,12 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: 幕后 · 文字剧场 v${{ github.ref_name }}
           body: |
-            ## 🎬 幕后 · 文字剧场 ${{ github.ref_name }}
+            ## 幕后 · 文字剧场 v${{ github.ref_name }}
 
             电影美学剧本 + 分镜工作台。
 
