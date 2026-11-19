@@ -92,23 +92,12 @@
       "icon": "build/icon.png",
       "category": "public.app-category.productivity",
       "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
+        "dmg",
+        "zip"
       ],
       "artifactName": "Muhou-Text-Theater-${version}-Mac-${arch}.${ext}",
       "identity": "-",
+      "hardenedRuntime": false,
       "gatekeeperAssess": false
     },
     "dmg": {
@@ -117,21 +106,7 @@
       "window": {
         "width": 600,
         "height": 400
-      },
-      "contents": [
-        {
-          "x": 180,
-          "y": 220,
-          "type": "file",
-          "path": "幕后 · 文字剧场.app"
-        },
-        {
-          "x": 420,
-          "y": 220,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ]
+      }
     }
   }
 }
