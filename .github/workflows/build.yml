@@ -1,9 +1,8 @@
-name: Build · 幕后 文字剧场
+name: Build · Muhou Text Theater
 
 on:
   push:
     branches: [main, master]
-    tags: ['v*']
   workflow_dispatch:
 
 concurrency:
@@ -11,108 +10,80 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: ${{ matrix.label }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        - label: macOS · x64
-          os: macos-13
-          arch: x64
-          targets: dmg,zip
-        - label: macOS · arm64
-          os: macos-latest
-          arch: arm64
-          targets: dmg,zip
-        - label: Windows · x64
-          os: windows-latest
-          arch: x64
-          targets: nsis,portable
-
+  build-macos-x64:
+    name: macOS · x64
+    runs-on: macos-13
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Vite build
-        run: npm run build
-
-      # mac runner 上 electron-builder 自动 ad-hoc deep codesign（Helper + Framework + 主 app）
+      - run: npm ci
+      - run: npm run build
       - name: Electron Builder
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          OS_FLAG="${{ matrix.os == 'windows-latest' && 'win' || 'mac' }}"
-          TARGETS="${{ matrix.targets }}"
           npx electron-builder \
-            --${OS_FLAG} \
-            --${{ matrix.arch }} \
-            --publish never \
-            -c.${OS_FLAG}.target="${TARGETS}"
-
-      - name: List artifacts
-        shell: bash
-        run: ls -lh release/ 2>/dev/null || dir release\
-
-      - name: Upload artifacts
+            --mac --x64 --publish never \
+            -c.mac.target=dmg,zip
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: muhou-${{ matrix.arch }}-${{ github.run_id }}
-          path: |
-            release/*.dmg
-            release/*.zip
-            release/*.exe
-            release/*.blockmap
+          name: muhou-macos-x64-${{ github.run_id }}
+          path: release/*.{dmg,zip,blockmap}
           if-no-files-found: warn
           retention-days: 30
 
-  release:
-    name: Release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
+  build-macos-arm64:
+    name: macOS · arm64
+    runs-on: macos-latest
     steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          path: artifacts
-          merge-multiple: true
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Electron Builder
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          npx electron-builder \
+            --mac --arm64 --publish never \
+            -c.mac.target=dmg,zip
+      - name: Upload
+        uses: actions/upload-artifact@v4
         with:
-          name: 幕后 · 文字剧场 v${{ github.ref_name }}
-          body: |
-            ## 幕后 · 文字剧场 v${{ github.ref_name }}
+          name: muhou-macos-arm64-${{ github.run_id }}
+          path: release/*.{dmg,zip,blockmap}
+          if-no-files-found: warn
+          retention-days: 30
 
-            电影美学剧本 + 分镜工作台。
-
-            ### 下载
-
-            | 平台 | 架构 | 格式 |
-            |------|------|------|
-            | macOS | Intel (x64) | `.dmg` · `.zip` |
-            | macOS | Apple Silicon (arm64) | `.dmg` · `.zip` |
-            | Windows | x64 | NSIS 安装版 `.exe` · 便携版 `.exe` |
-
-            ### 激活码
-
-            测试通用码：**`SF-TEST-MUHOU-2026`**
-          files: |
-            artifacts/*.dmg
-            artifacts/*.zip
-            artifacts/*.exe
-            artifacts/*.blockmap
+  build-windows:
+    name: Windows · x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Electron Builder
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx electron-builder --win --x64 --publish never -c.win.target=nsis,portable
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: muhou-windows-x64-${{ github.run_id }}
+          path: release/*.{exe,blockmap}
+          if-no-files-found: warn
+          retention-days: 30
