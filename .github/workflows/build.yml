@@ -24,16 +24,15 @@ jobs:
       - name: Electron Builder
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          npx electron-builder \
-            --mac --x64 --publish never \
-            -c.mac.target=dmg,zip
+        run: npx electron-builder --mac --x64 --publish never
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: muhou-macos-x64-${{ github.run_id }}
-          path: release/*.{dmg,zip,blockmap}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.blockmap
           if-no-files-found: warn
           retention-days: 30
 
@@ -51,16 +50,15 @@ jobs:
       - name: Electron Builder
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          npx electron-builder \
-            --mac --arm64 --publish never \
-            -c.mac.target=dmg,zip
+        run: npx electron-builder --mac --arm64 --publish never
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: muhou-macos-arm64-${{ github.run_id }}
-          path: release/*.{dmg,zip,blockmap}
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.blockmap
           if-no-files-found: warn
           retention-days: 30
 
@@ -78,12 +76,13 @@ jobs:
       - name: Electron Builder
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npx electron-builder --win --x64 --publish never -c.win.target=nsis,portable
+        run: npx electron-builder --win --x64 --publish never
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: muhou-windows-x64-${{ github.run_id }}
-          path: release/*.{exe,blockmap}
+          path: |
+            release/*.exe
+            release/*.blockmap
           if-no-files-found: warn
           retention-days: 30

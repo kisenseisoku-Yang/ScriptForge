@@ -108,7 +108,7 @@
         }
       ],
       "artifactName": "Muhou-Text-Theater-${version}-Mac-${arch}.${ext}",
-      "identity": null,
+      "identity": "-",
       "gatekeeperAssess": false
     },
     "dmg": {
