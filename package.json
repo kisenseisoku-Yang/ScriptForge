@@ -1,0 +1,137 @@
+{
+  "name": "scriptforge",
+  "private": true,
+  "version": "1.5.10",
+  "description": "幕后 · 文字剧场 — Cinematic script & storyboard workbench by KisenSeisoku",
+  "author": "KisenSeisoku",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "node electron/dev.cjs",
+    "electron:preview": "vite build && electron . --prod",
+    "electron:build": "vite build && electron-builder --win --x64",
+    "electron:build:portable": "vite build && electron-builder --win portable --x64"
+  },
+  "dependencies": {
+    "docx": "^8.5.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.2",
+    "jszip": "^3.10.2",
+    "lucide-react": "^0.445.0",
+    "mammoth": "^1.13.0",
+    "nanoid": "^5.0.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "electron": "^45.3.3",
+    "electron-builder": "^26.18.0",
+    "postcss": "^8.4.47",
+    "sharp": "^0.35.5",
+    "tailwindcss": "^3.4.13",
+    "vite": "^5.4.8"
+  },
+  "build": {
+    "appId": "com.kisenseisoku.muhou",
+    "productName": "幕后 · 文字剧场",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [],
+    "removePackageScripts": true,
+    "forceCodeSigning": false,
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Muhou-Text-Theater-${version}-Win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "幕后 · 文字剧场",
+      "installerLanguages": [
+        "zh-CN",
+        "en-US"
+      ],
+      "perMachine": false
+    },
+    "portable": {
+      "artifactName": "Muhou-Text-Theater-Portable-${version}-Win-${arch}.${ext}"
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "artifactName": "Muhou-Text-Theater-${version}-Mac-${arch}.${ext}",
+      "identity": null,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "幕后 · 文字剧场 ${version}",
+      "iconSize": 80,
+      "window": {
+        "width": 600,
+        "height": 400
+      },
+      "contents": [
+        {
+          "x": 180,
+          "y": 220,
+          "type": "file",
+          "path": "幕后 · 文字剧场.app"
+        },
+        {
+          "x": 420,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  }
+}
