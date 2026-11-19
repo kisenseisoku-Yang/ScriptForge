@@ -9,7 +9,7 @@ name: Build · 幕后 文字剧场
 on:
   push:
     branches: [main, master]
-  tags: ['v*']
+    tags: ['v*']
   workflow_dispatch:
 
 # 每个 job 自己的 runner，互不干扰
